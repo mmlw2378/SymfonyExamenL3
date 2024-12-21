@@ -1,0 +1,232 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello UserController!
+{% endblock %}
+
+{% block body %}
+	<style></style>
+
+	<main class="mt-8 mx-4 md:mx-8 rounded-xl bg-white p-4 shadow-sm flex flex-col">
+		<div class="flex flex-col justify-between gap-4 mb-6 w-full bg-white rounded-lg shadow p-4">
+			<div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+				<div class="text-xl font-bold mb-2 sm:mb-0">Ecran Admin</div>
+			</div>
+			<div class="flex flex-col sm:flex-row justify-between items-center">
+				<div class="flex flex-wrap justify-center sm:justify-start gap-2">
+					<button class="bg-red-500 text-white px-3 py-1 rounded" onclick="filterTable('ALL')">ALL</button>
+					<button class="bg-white border border-gray-300 px-3 py-1 rounded" onclick="filterTable('Admin')">Admin</button>
+					<button class="bg-white border border-gray-300 px-3 py-1 rounded" onclick="filterTable('Boutiquier')">Boutiquier</button>
+					<button class="bg-white border border-gray-300 px-3 py-1 rounded" onclick="filterTable('Client')">Client</button>
+				</div>
+				<button data-modal-target="userModal" data-modal-toggle="userModal" class="bg-blue-600 text-white px-4 py-2 rounded mt-2 sm:mt-0" onclick="openModal('create')">NOUVEAU</button>
+			</div>
+			<!-- Table responsive -->
+			<div class="overflow-x-auto">
+				<table class="min-w-full bg-white">
+					<thead class="bg-blue-600 text-white">
+						<tr>
+							<th class="py-2 px-4 text-center">ROLE</th>
+							<th class="py-2 px-4 text-center">NOM COMPLET</th>
+							<th class="py-2 px-4 text-center">LOGIN</th>
+							<th class="py-2 px-4 text-center">TELEPHONE</th>
+							<th class="py-2 px-4 text-center">ACTION</th>
+						</tr>
+					</thead>
+					<tbody class="text-gray-700" id="user-table-body">
+						{% for user in users %}
+							<tr data-id="{{ user.id }}" data-role="{{ user.roles[0]|replace({'ROLE_': ''})|capitalize }}">
+								<td class="py-2 px-4 text-center">
+									{% for role in user.roles %}
+										{% if role != 'ROLE_USER' %}
+											{{ role }}
+										{% endif %}
+									{% endfor %}
+								</td>
+								<td class="py-2 px-4 text-center">{{ user.nom }}
+									{{ user.prenom }}</td>
+								<td class="py-2 px-4 text-center">{{ user.login }}</td>
+								<td class="py-2 px-4 text-center">{{ user.telephone }}</td>
+								<td class="border-t border-gray-200 py-2 px-4 text-center mt-2 sm:mt-0">
+									<button class="bg-blue-500 text-white px-3 py-1 rounded" onclick="openModal('edit', {{ user.id }})" title="MODIFIER">
+										<i class="fas fa-edit"></i>
+									</button>
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			<!-- Pagination -->
+			<div class="mt-4 flex justify-center sm:justify-end space-x-1">
+				{% if currentPage > 1 %}
+					<a href="{{ path('app_user', {'page': currentPage - 1}) }}" class="bg-gray-200 text-gray-600 py-1 px-3 rounded-l-md hover:bg-gray-300 focus:outline-none">&lt;</a>
+				{% else %}
+					<span class="bg-gray-200 text-gray-600 py-1 px-3 rounded-l-md">&lt;</span>
+				{% endif %}
+
+				{% for i in 1..totalPages %}
+					<a href="{{ path('app_user', {'page': i}) }}" class="bg-blue-600 text-white py-1 px-3 hover:bg-blue-700 focus:outline-none {% if i == currentPage %}bg-blue-800{% endif %}">{{ i }}</a>
+				{% endfor %}
+
+				{% if currentPage < totalPages %}
+					<a href="{{ path('app_user', {'page': currentPage + 1}) }}" class="bg-gray-200 text-gray-600 py-1 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none">&gt;</a>
+				{% else %}
+					<span class="bg-gray-200 text-gray-600 py-1 px-3 rounded-r-md">&gt;</span>
+				{% endif %}
+			</div>
+		</div>
+	</main>
+</div></div><!-- Modal --><div id="userModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full">
+<div class="relative p-4 w-full max-w-2xl h-full md:h-auto">
+	<div class="relative bg-white rounded-lg shadow pt-10 px-4 pb-4 w-full max-w-md mx-auto">
+		<button type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center" data-modal-hide="userModal">
+			<svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 011.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+			</svg>
+		</button>
+		<h3 class="mb-4 text-lg font-normal text-gray-500">N. UTILISATEUR</h3>
+		<div class="p-6 text-center border rounded-xl">
+
+<form method="POST" class="space-y-4" action="{{ path(isEdit ? 'app_edit_user' : 'app_create_user', { id: user.id }) }}">
+				{# <pre>{{ dump(isEdit) }}</pre> #}
+				<input type="text" name="Prenom" placeholder="Prenom" id="prenom" value="{{ user.prenom }}" class="border border-gray-300 p-2 w-full rounded-lg"/>
+				<input type="text" name="Nom" placeholder="Nom" id="nom" value="{{ user.nom }}" class="border border-gray-300 p-2 w-full rounded-lg"/>
+				<input type="text" name="Tel" placeholder="Tel" id="tel" value="{{ user.telephone }}" class="border border-gray-300 p-2 w-full rounded-lg"/>
+				<input type="text" name="Adresse" placeholder="Adresse" id="adresse" value="{{ user.adresse }}" class="border border-gray-300 p-2 w-full rounded-lg"/>
+				<input type="text" name="Login" placeholder="Login" id="login" value="{{ user.login }}" class="border border-gray-300 p-2 w-full rounded-lg"/>
+				<input type="password" name="Password" placeholder="Password" id="password" value="{{ user.password }}" class="border border-gray-300 p-2 w-full rounded-lg"/>
+				<div class="flex items-center">
+					<input id="fileInput" name="fileInput" type="file" class="border border-gray-300 w-full rounded-r-lg pl-2"/>
+				</div>
+				<div class="flex flex-wrap justify-between gap-2" id="role">
+					<button type="button" class="bg-gray-300 text-gray-700 px-4 py-2 rounded flex-grow" onclick="selectRole('Admin')">Admin</button>
+					<button type="button" class="bg-gray-300 text-gray-700 px-4 py-2 rounded flex-grow" onclick="selectRole('Boutiquier')">Boutiquier</button>
+					<button type="button" class="bg-blue-600 text-white px-4 py-2 rounded flex-grow" onclick="selectRole('Client')">Client</button>
+				</div>
+				<input type="hidden" name="role" id="roleInput" value="{{ user.roles[0] ?? '' }}"/>
+
+
+				<div class="flex justify-between">
+					<button type="button" class="bg-red-500 text-white px-4 py-2 rounded" onclick="closeModal()">ANNULER</button>
+					<button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">{{ isEdit ? 'MODIFIER' : 'ENREGISTRER' }}</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div></div><script>
+const modal = document.getElementById('userModal');
+if (modal) {
+function openModal(action, userId = null) {
+const overlay = document.querySelector('.modal-overlay');
+const form = modal.querySelector('form');
+
+if (action === 'create') {
+form.setAttribute('action', '{{ path('app_create_user') }}'); // URL pour la création
+document.getElementById('prenom').value = '';
+document.getElementById('nom').value = '';
+document.getElementById('tel').value = '';
+document.getElementById('adresse').value = '';
+document.getElementById('login').value = '';
+document.getElementById('password').value = '';
+document.getElementById('roleInput').value = '';
+} else if (action === 'edit' && userId !== null) { // Charger les données de l'utilisateur
+fetch (`/admin/user/${userId}/edit`).then(response => response.json()).then(data => {
+if (data.success) {
+document.getElementById('prenom').value = data.user.prenom;
+document.getElementById('nom').value = data.user.nom;
+document.getElementById('tel').value = data.user.tel;
+document.getElementById('adresse').value = data.user.adresse;
+document.getElementById('login').value = data.user.login;
+document.getElementById('password').value = data.user.password;
+document.getElementById('roleInput').value = data.user.role;
+form.setAttribute('action', `/admin/user/${userId}/edit`); // URL pour la modification
+}
+});
+}
+modal.classList.remove('hidden'); // Afficher le modal
+overlay.classList.remove('hidden'); // Afficher l'overlay
+}
+
+
+function closeModal() {
+const modal = document.getElementById('userModal');
+const overlay = document.querySelector('.overlay');
+modal.classList.add('hidden');
+if (overlay) {
+overlay.classList.add('hidden');
+}
+}
+} else {
+console.error('Modal not found');
+}
+
+const form = modal ? modal.querySelector('form') : null;
+if (form) {
+function submitForm(event) {
+event.preventDefault();
+
+const formData = new FormData(document.getElementById('userForm'));
+const newUser = {
+prenom: formData.get('Prenom'),
+nom: formData.get('Nom'),
+tel: formData.get('Tel'),
+adresse: formData.get('Adresse'),
+login: formData.get('Login'),
+password: formData.get('Password'),
+role: formData.get('role'),
+fileInput: formData.get('fileInput')
+};
+
+const tableBody = document.getElementById('user-table-body');
+const newRow = document.createElement('tr');
+newRow.innerHTML = `
+        <td class="py-2 px-4 text-center">${
+newUser.role
+}</td>
+        <td class="py-2 px-4 text-center">${
+newUser.prenom
+} ${
+newUser.nom
+}</td>
+        <td class="py-2 px-4 text-center">${
+newUser.login
+}</td>
+        <td class="py-2 px-4 text-center">${
+newUser.tel
+}</td>
+        <td class="border-t border-gray-200 py-2 px-4 text-center">
+            <button class="bg-blue-500 text-white px-3 py-1 rounded" onclick="openModal('edit')">Modifier</button>
+        </td>
+    `;
+tableBody.appendChild(newRow);
+
+closeModal();
+}
+} else {
+console.error('Form not found');
+
+
+function selectRole(role) { // Mettre à jour la valeur du champ caché 'role' avec la sélection
+document.getElementById('roleInput').value = role;
+
+// Mettre à jour l'apparence des boutons pour montrer quel rôle est sélectionné
+const buttons = document.querySelectorAll('#role button');
+buttons.forEach(button => button.classList.remove('bg-blue-600', 'text-white', 'bg-gray-300', 'text-gray-700'));
+
+// Highlight selected button
+const selectedButton = Array.from(buttons).find(button => button.innerText === role);
+selectedButton.classList.add('bg-blue-600', 'text-white');
+}
+}
+
+
+function filterTable(role) {
+const rows = document.querySelectorAll('tbody tr');
+rows.forEach(row => {
+if (role === 'ALL' || row.getAttribute('data-role') === role) {
+row.style.display = '';
+} else {
+row.style.display = 'none';
+}
+});
+}</script>{% endblock %}
